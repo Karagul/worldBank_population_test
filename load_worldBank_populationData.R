@@ -98,9 +98,4 @@ load_worldBank_populationData <- function() {
     }
   }
   
-  # Sample pull-down:
-  # select * from worldBank.countryLookup 
-  # left join worldBank.popByYear on (worldBank.countryLookup.country_ID=worldBank.popByYear.country_ID)
-  # where countryCode='USD' order by popYear;
-  
 }
