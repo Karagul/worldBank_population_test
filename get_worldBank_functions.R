@@ -16,10 +16,9 @@ get_worldBank_region_countries <- function(regionName){
   dbGetQuery(dbCn,q);
 }
 
-# Get countries in region -----------------------------------------------------------
+# Get a history of a region's poulation ----------------------------------------------
 get_worldBank_region_popHist <- function(regionName){
 
-  # Construct query
   q <- paste("select popYear As year,cast(sum(population) As Integer) As population from worldBank.regions ",
              "right join worldBank.countryRegion on (regions.region_ID = countryRegion.region_ID) ",
              "right join worldBank.popByYear on (countryRegion.country_ID = popByYear.country_ID)",
@@ -28,4 +27,18 @@ get_worldBank_region_popHist <- function(regionName){
              sep='');
   
   dbGetQuery(dbCn,q);
+}
+
+# Get population aggregated by region -------------------------------------------------
+get_worldBank_pop_byRegion <- function(regionType,year){
+
+  q <- paste("select region,cast(sum(population) As Integer) as population from worldBank.regions ",
+             "right join worldBank.countryRegion on (regions.region_ID = countryRegion.region_ID) ",
+             "right join worldBank.popByYear on (countryRegion.country_ID = popByYear.country_ID) ",
+             "where regionType='",regionType,"' ",
+             "and popYear=",year," group by region order by region;",
+             sep='');
+  
+  dbGetQuery(dbCn,q);
+  
 }
