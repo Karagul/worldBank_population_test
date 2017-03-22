@@ -30,7 +30,7 @@ get_worldBank_region_popHist <- function(regionName){
 }
 
 # Get population aggregated by region -------------------------------------------------
-get_worldBank_pop_byRegion <- function(regionType,year){
+get_worldBank_region_population <- function(regionType,year){
 
   q <- paste("select region,cast(sum(population) As Integer) as population from worldBank.regions ",
              "right join worldBank.countryRegion on (regions.region_ID = countryRegion.region_ID) ",
