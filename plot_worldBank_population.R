@@ -11,11 +11,13 @@ plot_pie_region<-function(regionType,year){
   
   p <- ggplot(popTbl, aes(x=1, y=population, fill=region)) +
     geom_bar(stat='identity', color='black') +
-    guides(fill=guide_legend(override.aes=list(color=NA))) + 
+    guides(fill=guide_legend(title="Regions",override.aes=list(color=NA))) + 
     coord_polar(theta='y') +
     theme(axis.ticks=element_blank(),
           axis.text=element_blank(),
-          axis.title=element_blank());
+          axis.title=element_blank()) +
+    ggtitle(paste("World Population by ",regionType," Regions, ",year,sep='')) + 
+    theme(plot.title = element_text(lineheight=.8, face="bold"));
   
   print(p)
 }
