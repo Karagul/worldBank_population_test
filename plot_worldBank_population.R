@@ -38,7 +38,10 @@ plot_stackArea_histByRegion<-function(regionType,yrs){
   
   regionHistTbl[,"population"] <- regionHistTbl[,"population"]/1000000
   
-  p <- ggplot(regionHistTbl, aes(x=year, y=population, fill=region)) + geom_area();
+  p <- ggplot(regionHistTbl, aes(x=year, y=population, fill=region)) + geom_area() +
+    guides(fill=guide_legend(title="Regions",override.aes=list(color=NA))) +
+    ggtitle(paste("World Population by ",regionType," Regions, ",yrs[1]," to ",tail(yrs,n=1),sep='')) + 
+    theme(plot.title = element_text(lineheight=.8, face="bold"));
   
   print(p)
 }
