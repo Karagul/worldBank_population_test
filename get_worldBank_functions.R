@@ -42,3 +42,18 @@ get_worldBank_region_population <- function(regionType,year){
   dbGetQuery(dbCn,q);
   
 }
+
+
+# Get land area aggregated by region -------------------------------------------------
+get_worldBank_region_area <- function(regionType,year){
+  
+  q <- paste("select region,cast(sum(landArea) As Integer) as area from worldBank.regions ",
+             "right join worldBank.countryRegion on (regions.region_ID = countryRegion.region_ID) ",
+             "right join worldBank.areaByYear on (countryRegion.country_ID = areaByYear.country_ID) ",
+             "where regionType='",regionType,"' ",
+             "and areaYear=",year," group by region order by region;",
+             sep='');
+  
+  dbGetQuery(dbCn,q);
+  
+}

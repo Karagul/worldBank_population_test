@@ -8,6 +8,7 @@ library(ggplot2)
 plot_pie_region<-function(regionType,year){
   
   popTbl <- get_worldBank_region_population(regionType,year);
+  # popTbl <- get_worldBank_region_area(regionType,year);
   
   p <- ggplot(popTbl, aes(x=1, y=population, fill=region)) +
     geom_bar(stat='identity', color='black') +
