@@ -57,3 +57,20 @@ get_worldBank_region_area <- function(regionType,year){
   dbGetQuery(dbCn,q);
   
 }
+
+# Get full history of population, area and density for all countries -----------------
+get_worldBank_popDensity_history <- function(sYear,eYear){
+  
+  q <- paste("select countryCode,areaYear As year,population,landArea,cast(population/landArea As double) As density ",
+             "from worldBank.popByYear ",
+             "right join worldBank.areaByYear on (",
+                "(popByYear.country_ID = areaByYear.country_ID) and (popByYear.popYear = areaByYear.areaYear)) ",
+             "right join worldBank.countryLookup on (areaByYear.country_ID = countryLookup.country_ID) ",
+             "where landarea is not null and population is not null ",
+             "and areaYear between ",sYear," and ",eYear,
+             " order by countryCode,areayear;",
+             sep='');
+  
+  dbGetQuery(dbCn,q);
+  
+}
