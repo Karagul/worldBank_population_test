@@ -1,8 +1,8 @@
 # This is a set of functions which uses rworldmap to generate a gif of
 # World Bank population data on a world map.
 
-library(rworldmap)
 library(sp)
+library(rworldmap)
 library(dplyr)
 library(ggplot2)
 library(gganimate)
@@ -34,6 +34,14 @@ map_worldBank_popDensity<-function(){
   wmap[wmap$ISO3=='SSD','ISO3']='SDN';  # South Sudan -> Sudan
   wmap[wmap$ISO3=='ESH','ISO3']='MAR';  # Western Sahara -> Morocco
   
+  # Calculating the outline of the map --------------------------------------------------------
+  
+  outline <- bbox(wmap)
+  outline <- data.frame(xmin=outline["x","min"],
+                        xmax=outline["x","max"],
+                        ymin=outline["y","min"],
+                        ymax=outline["y","max"]) + 100000;
+  
   
   # Apply density data to map -----------------------------------------------------------------
   
@@ -43,22 +51,25 @@ map_worldBank_popDensity<-function(){
   # Do the plotting ---------------------------------------------------------------------------
   
   o <- ggplot(data=wmapTbl) +
+    geom_rect(data=outline, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), color=1, fill="white", size=0.3) +
     geom_polygon(aes(x = long, y = lat, group = group, fill=density, frame = year), color="gray90") +
     scale_fill_gradientn(name="Density",colours=rev(heat.colors(10))) +
     theme_void() +
-    guides(fill = guide_colorbar(title.position = "top")) +
-    labs(title = "Density") +
+    guides(fill = guide_colorbar(title=expression(paste("People /",km^2)),title.position = "top")) +
+    labs(title = "Global Population Density, ") +
     labs(caption = "Map by n=30 (www.nequals30.com), @nequals30") +
-    theme(plot.title = element_text(hjust = 0.5, vjust = 0.05, size=25)) +
-    theme(plot.caption = element_text(hjust = 0, color="gray40", size=15)) +
+    theme(plot.caption = element_text(hjust = 0, size=15)) +
     coord_cartesian(xlim = c(-11807982, 14807978)) +
-    theme( legend.position = c(.5, .08), 
+    theme( plot.background = element_rect(fill="gray90"),
+           plot.title = element_text(face="bold",hjust = 0.5, vjust = -1, size=35),
+           legend.position = c(.5, .13), 
            legend.direction = "horizontal", 
            legend.title.align = 0,
            legend.key.size = unit(1.3, "cm"),
            legend.title=element_text(size=17), 
-           legend.text=element_text(size=13) );
+           legend.text=element_text(size=13), 
+           legend.background=element_rect(fill="white"));
   
-  gg_animate(o, "images/outgif.gif", title_frame =T,ani.width=1600, ani.height=820, dpi=800, interval = .4)
+  gg_animate(o, "images/outgif.gif", title_frame =T,ani.width=1600, ani.height=820, dpi=800, interval = .4);
   
 }
