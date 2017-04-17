@@ -23,7 +23,15 @@ load_worldBank_area <- function(){
     if (length(thisCountryID)==1){
       for (y in 1961:2015){
         thisArea <- mainTbl[i,paste('X',y,sep="")];
+
+        # World Bank is missing areas for some countries before 2000. This assumes the area is the same as 2015
+        if (is.na(thisArea)) {
+          if (!is.na(mainTbl[i,'X2015'])){
+            thisArea = mainTbl[i,'X2015'];
+          }
+        }
         thisArea[is.na(thisArea)] <- 'NULL';
+        
         q <- paste("insert into worldBank.areaByYear (country_ID,areaYear,landArea) values(",thisCountryID,",",y,",",thisArea,"); ",sep="");
         dbGetQuery(dbCn,q);
       }

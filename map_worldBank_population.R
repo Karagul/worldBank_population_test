@@ -13,8 +13,19 @@ map_worldBank_popDensity<-function(){
   
   fullHist <- get_worldBank_popDensity_history(seq(1961,2015,6));
   
-  # A few politically incorrect manipulations to make data historically consistent ------------
+  # A few manipulations to fill in missing World Bank data ------------------------------------
   
+  fullHist$population[(fullHist$countryCode=='ERI')&(fullHist$year==2015)] = fullHist$population[(fullHist$countryCode=='ERI')&(fullHist$year==2009)];
+  fullHist <- fullHist[!is.element(fullHist$countryCode,c('SSD','SXM')),];
+  fullHist$density = fullHist$population / fullHist$landArea;
+  
+  # Palestine's density is missing so replacing it with Israel's density (not politically correct)
+  isNullPalestine = (is.na(fullHist$density)&(fullHist$countryCode=='PSE'));
+  fullHist$density[isNullPalestine] <- fullHist$density[(fullHist$countryCode=='ISR')&(is.element(fullHist$year,fullHist$year[isNullPalestine]))];
+  
+  # Serbia's density is missing so replacing it with Bosnia's density (not politically correct)
+  isNullSerbia = (is.na(fullHist$density)&(fullHist$countryCode=='SRB'));
+  fullHist$density[isNullSerbia] <- fullHist$density[(fullHist$countryCode=='BIH')&(is.element(fullHist$year,fullHist$year[isNullSerbia]))];
   
   fullHist[fullHist$density>300,'density'] <- 300;
   
@@ -33,6 +44,7 @@ map_worldBank_popDensity<-function(){
   wmap <- subset(wmap,!(NAME=='Antarctica'));
   wmap[wmap$ISO3=='SSD','ISO3']='SDN';  # South Sudan -> Sudan
   wmap[wmap$ISO3=='ESH','ISO3']='MAR';  # Western Sahara -> Morocco
+  wmap[wmap$ISO3=='SOL','ISO3']='SOM';  # Somaliland -> Somalia (Strange choice by rwroldmaps)
   
   # Calculating the outline of the map --------------------------------------------------------
   
@@ -55,7 +67,7 @@ map_worldBank_popDensity<-function(){
     geom_polygon(aes(x = long, y = lat, group = group, fill=density, frame = year), color="gray90") +
     scale_fill_gradientn(name="Density",colours=rev(heat.colors(10))) +
     theme_void() +
-    guides(fill = guide_colorbar(title=expression(paste("People /",km^2)),title.position = "top")) +
+    guides(fill = guide_colorbar(title=expression(paste("People / ",km^2)),title.position = "top")) +
     labs(title = "Global Population Density, ") +
     labs(caption = "Map by n=30 (www.nequals30.com), @nequals30") +
     theme(plot.caption = element_text(hjust = 0, size=15)) +
