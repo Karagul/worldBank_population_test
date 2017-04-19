@@ -9,15 +9,22 @@ library(gganimate)
 
 map_worldBank_popDensity<-function(){
   
+  yrs<-seq(1961,2015,6);
+  
   # Get density for all countries for all years -----------------------------------------------
   
-  fullHist <- get_worldBank_popDensity_history(seq(1961,2015,6));
+  fullHist <- get_worldBank_popDensity_history(yrs);
   
   # A few manipulations to fill in missing World Bank data ------------------------------------
   
   fullHist$population[(fullHist$countryCode=='ERI')&(fullHist$year==2015)] = fullHist$population[(fullHist$countryCode=='ERI')&(fullHist$year==2009)];
-  fullHist <- fullHist[!is.element(fullHist$countryCode,c('SSD','SXM')),];
+  fullHist <- fullHist[!is.element(fullHist$countryCode,c('SSD','SXM','KSV')),];
   fullHist$density = fullHist$population / fullHist$landArea;
+  
+  # Adding Taiwan and French Guiana
+  addHist <- data.frame(c(rep('TWN',length(yrs)),rep('GUF',length(yrs))),c(yrs,yrs),0,0,c(rep(300.0,length(yrs)),rep(3.0,length(yrs))));
+  colnames(addHist) <- colnames(fullHist);
+  fullHist <- rbind(fullHist,addHist);
   
   # Palestine's density is missing so replacing it with Israel's density (not politically correct)
   isNullPalestine = (is.na(fullHist$density)&(fullHist$countryCode=='PSE'));
@@ -44,7 +51,8 @@ map_worldBank_popDensity<-function(){
   wmap <- subset(wmap,!(NAME=='Antarctica'));
   wmap[wmap$ISO3=='SSD','ISO3']='SDN';  # South Sudan -> Sudan
   wmap[wmap$ISO3=='ESH','ISO3']='MAR';  # Western Sahara -> Morocco
-  wmap[wmap$ISO3=='SOL','ISO3']='SOM';  # Somaliland -> Somalia (Strange choice by rwroldmaps)
+  wmap[wmap$ISO3=='SOL','ISO3']='SOM';  # Somaliland -> Somalia
+  wmap[wmap$ISO3=='KOS','ISO3']='SRB';  # Kosovo -> Serbia
   
   # Calculating the outline of the map --------------------------------------------------------
   
