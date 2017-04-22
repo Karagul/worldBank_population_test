@@ -10,19 +10,20 @@ library(gganimate)
 map_worldBank_popDensity<-function(){
   
   yrs<-seq(1961,2015,6);
+  maxDens<-250;
   
-  # Get density for all countries for all years -----------------------------------------------
+# Get density for all countries for all years -----------------------------------------------
   
   fullHist <- get_worldBank_popDensity_history(yrs);
   
-  # A few manipulations to fill in missing World Bank data ------------------------------------
+# A few manipulations to fill in missing World Bank data ------------------------------------
   
   fullHist$population[(fullHist$countryCode=='ERI')&(fullHist$year==2015)] = fullHist$population[(fullHist$countryCode=='ERI')&(fullHist$year==2009)];
   fullHist <- fullHist[!is.element(fullHist$countryCode,c('SSD','SXM','KSV')),];
   fullHist$density = fullHist$population / fullHist$landArea;
   
   # Adding Taiwan and French Guiana
-  addHist <- data.frame(c(rep('TWN',length(yrs)),rep('GUF',length(yrs))),c(yrs,yrs),0,0,c(rep(300.0,length(yrs)),rep(3.0,length(yrs))));
+  addHist <- data.frame(c(rep('TWN',length(yrs)),rep('GUF',length(yrs))),c(yrs,yrs),0,0,c(rep(maxDens,length(yrs)),rep(3.0,length(yrs))));
   colnames(addHist) <- colnames(fullHist);
   fullHist <- rbind(fullHist,addHist);
   
@@ -34,19 +35,19 @@ map_worldBank_popDensity<-function(){
   isNullSerbia = (is.na(fullHist$density)&(fullHist$countryCode=='SRB'));
   fullHist$density[isNullSerbia] <- fullHist$density[(fullHist$countryCode=='BIH')&(is.element(fullHist$year,fullHist$year[isNullSerbia]))];
   
-  fullHist[fullHist$density>300,'density'] <- 300;
+  fullHist[fullHist$density>maxDens,'density'] <- maxDens;
   
-  # Pull in and set up world map --------------------------------------------------------------
+# Pull in and set up world map --------------------------------------------------------------
   
   wmap <- getMap(resolution="low");
   wmap <- spTransform(wmap, CRS("+proj=robin"));
   
-  # Interacting with rworldmap:
+# Interacting with rworldmap:
     # names(wmap) # what's in the object
     # levels(factor(wmap$NAME)) # Lists countries on map
     # subset(wmap,!(NAME=='Australia')) # removes certain countries
   
-  # Politically incorrect adjustments to match world bank countries ----------------------------
+# (Politically incorrect) adjustments to match world bank countries ----------------------------
   
   wmap <- subset(wmap,!(NAME=='Antarctica'));
   wmap[wmap$ISO3=='SSD','ISO3']='SDN';  # South Sudan -> Sudan
@@ -54,35 +55,30 @@ map_worldBank_popDensity<-function(){
   wmap[wmap$ISO3=='SOL','ISO3']='SOM';  # Somaliland -> Somalia
   wmap[wmap$ISO3=='KOS','ISO3']='SRB';  # Kosovo -> Serbia
   
-  # Calculating the outline of the map --------------------------------------------------------
   
-  outline <- bbox(wmap)
-  outline <- data.frame(xmin=outline["x","min"],
-                        xmax=outline["x","max"],
-                        ymin=outline["y","min"],
-                        ymax=outline["y","max"]) + 100000;
-  
-  
-  # Apply density data to map -----------------------------------------------------------------
+# Apply density data to map -----------------------------------------------------------------
   
   wmapTbl <- fortify(wmap,region="ISO3");
   wmapTbl <- left_join(wmapTbl,fullHist, by=c('id'='countryCode'));
   
-  # Do the plotting ---------------------------------------------------------------------------
+# Do the plotting ---------------------------------------------------------------------------
+  lbls <- seq(0,maxDens,maxDens/5);
+  lblsPlus <- rep_len("",length(lbls));
+  lblsPlus[length(lblsPlus)]<-"+";
+  lbls <- paste(lbls,lblsPlus,sep="");
   
   o <- ggplot(data=wmapTbl) +
-    geom_rect(data=outline, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), color=1, fill="white", size=0.3) +
     geom_polygon(aes(x = long, y = lat, group = group, fill=density, frame = year), color="gray90") +
-    scale_fill_gradientn(name="Density",colours=rev(heat.colors(10))) +
+    scale_fill_gradientn(name="Density",colours=rev(heat.colors(10)),labels = lbls) +
     theme_void() +
     guides(fill = guide_colorbar(title=expression(paste("People / ",km^2)),title.position = "top")) +
     labs(title = "Global Population Density, ") +
-    labs(caption = "Map by n=30 (www.nequals30.com), @nequals30") +
-    theme(plot.caption = element_text(hjust = 0, size=15)) +
-    coord_cartesian(xlim = c(-11807982, 14807978)) +
-    theme( plot.background = element_rect(fill="gray90"),
-           plot.title = element_text(face="bold",hjust = 0.5, vjust = -1, size=35),
-           legend.position = c(.5, .13), 
+    labs(caption = "Based on population and land area data from World Bank. Map by n=30 (www.nequals30.com) (@nequals30).") +
+    coord_cartesian(xlim = c(-11807982, 14807978),ylim=c(-5400000, 8340315)) +
+    theme( plot.background = element_rect(fill="white"),
+           plot.title = element_text(face="bold",hjust = 0.5, vjust = -7, size=35),
+           plot.caption = element_text(hjust = 0.5, size=15, colour="gray50"),
+           legend.position = c(.1, .13), 
            legend.direction = "horizontal", 
            legend.title.align = 0,
            legend.key.size = unit(1.3, "cm"),
